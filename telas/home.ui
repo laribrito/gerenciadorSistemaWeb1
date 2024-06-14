@@ -7,11 +7,21 @@
     <x>0</x>
     <y>0</y>
     <width>533</width>
-    <height>300</height>
+    <height>289</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Gerenciador do Sistema Greenville</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../sistemaWeb1/back/backendDesenvolvimento/uploads/ico/iconeExcelPrincipal.ico</normaloff>../../sistemaWeb1/back/backendDesenvolvimento/uploads/ico/iconeExcelPrincipal.ico</iconset>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background: rgb(249, 249, 249)</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="labelSystemStatus">
@@ -68,6 +78,9 @@
       <underline>true</underline>
      </font>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="layoutDirection">
      <enum>Qt::LeftToRight</enum>
     </property>
@@ -119,6 +132,21 @@
        </property>
        <property name="mouseTracking">
         <bool>true</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border-radius: 10px;
+background-color: #182e15;
+color: white;
+
+border-color: rgb(255, 255, 255);
+border-style: solid;
+border-width: 1px;
+
+/*
+border-color: rgba(255, 255, 255, 0.2);
+border-style: solid;
+border-width: 0 2px 2px 0;
+*/</string>
        </property>
        <property name="text">
         <string>Iniciar</string>
@@ -215,9 +243,9 @@
     <property name="geometry">
      <rect>
       <x>160</x>
-      <y>20</y>
+      <y>30</y>
       <width>211</width>
-      <height>71</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="font">
