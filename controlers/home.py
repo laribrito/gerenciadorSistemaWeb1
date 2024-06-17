@@ -1,11 +1,15 @@
-from controlers import FOLDER_TO_SCREENS
-from PyQt5 import uic, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QSystemTrayIcon, QPushButton, \
+    QLabel, QMessageBox
+from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QGuiApplication
+from PyQt5 import uic
+
+from controlers import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 from classes import System
+
 import os
 
-class Principal(QtWidgets.QMainWindow):
+class Principal(QMainWindow):
     def __init__(self):
         super().__init__()
         print("Initializing Principal")
@@ -23,6 +27,12 @@ class Principal(QtWidgets.QMainWindow):
         # componente de área de transferência
         self.clipboardObj = QGuiApplication.clipboard()
 
+        # componente para sistema de notificações
+        self.notificationsObj = QSystemTrayIcon(self)
+        self.notificationsObj.setIcon(QIcon(os.path.join(FOLDER_TO_STATICS, 'logo.png')))  # Substitua pelo caminho do seu ícone
+        self.notificationsObj.setVisible(True)
+        self.notificationsObj.show()
+
         # recuperar os botões
         allBtnsClicked = {
             'btnIniciar':   self.actionIniciar, 
@@ -31,34 +41,34 @@ class Principal(QtWidgets.QMainWindow):
         }
 
         for btnLabel, btnClicked in allBtnsClicked.items():
-            btnObj = self.findChild(QtWidgets.QPushButton, btnLabel)
+            btnObj = self.findChild(QPushButton, btnLabel)
             btnObj.clicked.connect(btnClicked)
             self.estilizaBotao(btnObj)
 
         # configurar label que leva para a tela avançada
-        labelAvancadas = self.findChild(QtWidgets.QLabel, 'labelAvancadas')
+        labelAvancadas = self.findChild(QLabel, 'labelAvancadas')
         labelAvancadas.mousePressEvent = self.actionLabelAvancadas
 
         # cria instancia de sistema
-        sy = System()
+        self._sy = System()
 
         # trocar o valor das variáveis
-        self._systemMainAddress = sy.ip
-        self._systemAdminAddress = f'{sy.ip}:8000'
+        self._systemMainAddress = self._sy.ip
+        self._systemAdminAddress = f'{self._sy.ip}:8000'
 
         # configurar o label que exibe informação de status do sistema
-        labelToSendStatus = self.findChild(QtWidgets.QLabel, 'labelSystemStatus')
-        labelToSendStatus.setText(sy.status)
+        labelToSendStatus = self.findChild(QLabel, 'labelSystemStatus')
+        labelToSendStatus.setText(self._sy.status)
 
         # configura o label que exibe o endereço do sistema principal
-        labelToSendSystemMain = self.findChild(QtWidgets.QLabel, 'systemMainLabel')
+        labelToSendSystemMain = self.findChild(QLabel, 'systemMainLabel')
         labelToSendSystemMain.mousePressEvent = self.actionLabelSystemMain
-        labelToSendSystemMain.setText(f'Principal: {sy.ip}')
+        labelToSendSystemMain.setText(f'Principal: {self._sy.ip}')
 
         # configura o label que exibe o endereço do sistema admin
-        labelToSendSystemAdmin = self.findChild(QtWidgets.QLabel, 'systemAdminLabel')
+        labelToSendSystemAdmin = self.findChild(QLabel, 'systemAdminLabel')
         labelToSendSystemAdmin.mousePressEvent = self.actionLabelSystemAdmin
-        labelToSendSystemAdmin.setText(f'Admin: {sy.ip}:8000')
+        labelToSendSystemAdmin.setText(f'Admin: {self._sy.ip}:8000')
         
     def actionLabelSystemMain(self, event):
         if event.button() == Qt.LeftButton:
@@ -70,7 +80,12 @@ class Principal(QtWidgets.QMainWindow):
 
     def actionCopyContentLabel(self, txt):
         self.clipboardObj.setText(txt)
-        QtWidgets.QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de copiar texto: " + txt)
+        self.notificationsObj.showMessage(
+            "Texto copiado com sucesso",
+            None,
+            QSystemTrayIcon.Information,
+            3000 
+        )
 
     def estilizaBotao(self, buttom):
         # Estilizando o botão com Qt Style Sheets
@@ -98,13 +113,13 @@ class Principal(QtWidgets.QMainWindow):
 
     def actionLabelAvancadas(self, event):
         if event.button() == Qt.LeftButton:
-            QtWidgets.QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de avançadas")
+            QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de avançadas")
 
     def actionIniciar(self):
-        QtWidgets.QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de iniciar")
+        QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de iniciar")
 
     def actionReiniciar(self):
-        QtWidgets.QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de reiniciar")
+        QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de reiniciar")
 
     def actionDesligar(self):
-        QtWidgets.QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de desligar")
+        QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de desligar")
