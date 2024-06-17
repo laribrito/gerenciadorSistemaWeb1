@@ -1,6 +1,8 @@
 from controlers import FOLDER_TO_SCREENS
 from PyQt5 import uic, QtWidgets
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QGuiApplication
+from classes import System
 import os
 
 class Principal(QtWidgets.QMainWindow):
@@ -12,6 +14,14 @@ class Principal(QtWidgets.QMainWindow):
         print("UI Loaded")
         self.show()
         print("Window Shown")
+
+        # ATRIBUTOS
+        self._systemMainAddress = ''
+        self._systemAdminAddress = ''
+
+        # COMPONENTES
+        # componente de área de transferência
+        self.clipboardObj = QGuiApplication.clipboard()
 
         # recuperar os botões
         allBtnsClicked = {
@@ -28,6 +38,41 @@ class Principal(QtWidgets.QMainWindow):
         # configurar label que leva para a tela avançada
         labelAvancadas = self.findChild(QtWidgets.QLabel, 'labelAvancadas')
         labelAvancadas.mousePressEvent = self.actionLabelAvancadas
+
+        # cria instancia de sistema
+        sy = System()
+
+        # trocar o valor das variáveis
+        self._systemMainAddress = sy.ip
+        self._systemAdminAddress = f'{sy.ip}:8000'
+
+        # configurar o label que exibe informação de status do sistema
+        labelToSendStatus = self.findChild(QtWidgets.QLabel, 'labelSystemStatus')
+        labelToSendStatus.setText(sy.status)
+
+        # configura o label que exibe o endereço do sistema principal
+        labelToSendSystemMain = self.findChild(QtWidgets.QLabel, 'systemMainLabel')
+        labelToSendSystemMain.mousePressEvent = self.actionLabelSystemMain
+        labelToSendSystemMain.setText(f'Principal: {sy.ip}')
+        labelToSendSystemMain.hasSelectedText = True
+
+        # configura o label que exibe o endereço do sistema admin
+        labelToSendSystemAdmin = self.findChild(QtWidgets.QLabel, 'systemAdminLabel')
+        labelToSendSystemAdmin.mousePressEvent = self.actionLabelSystemAdmin
+        labelToSendSystemAdmin.setText(f'Admin: {sy.ip}:8000')
+        labelToSendSystemAdmin.hasSelectedText = True
+        
+    def actionLabelSystemMain(self, event):
+        if event.button() == Qt.LeftButton:
+            self.actionCopyContentLabel(self._systemMainAddress)
+
+    def actionLabelSystemAdmin(self, event):
+        if event.button() == Qt.LeftButton:
+            self.actionCopyContentLabel(self._systemAdminAddress)
+
+    def actionCopyContentLabel(self, txt):
+        self.clipboardObj.setText(txt)
+        QtWidgets.QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de copiar texto: " + txt)
 
     def estilizaBotao(self, buttom):
         # Estilizando o botão com Qt Style Sheets
