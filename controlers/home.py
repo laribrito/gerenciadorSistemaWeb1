@@ -54,13 +54,11 @@ class Principal(QtWidgets.QMainWindow):
         labelToSendSystemMain = self.findChild(QtWidgets.QLabel, 'systemMainLabel')
         labelToSendSystemMain.mousePressEvent = self.actionLabelSystemMain
         labelToSendSystemMain.setText(f'Principal: {sy.ip}')
-        labelToSendSystemMain.hasSelectedText = True
 
         # configura o label que exibe o endereço do sistema admin
         labelToSendSystemAdmin = self.findChild(QtWidgets.QLabel, 'systemAdminLabel')
         labelToSendSystemAdmin.mousePressEvent = self.actionLabelSystemAdmin
         labelToSendSystemAdmin.setText(f'Admin: {sy.ip}:8000')
-        labelToSendSystemAdmin.hasSelectedText = True
         
     def actionLabelSystemMain(self, event):
         if event.button() == Qt.LeftButton:
