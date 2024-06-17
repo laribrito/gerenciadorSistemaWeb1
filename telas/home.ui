@@ -273,6 +273,9 @@ border-width: 0 2px 2px 0;
       <pointsize>10</pointsize>
      </font>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="text">
      <string>sistema principal</string>
     </property>
@@ -291,6 +294,9 @@ border-width: 0 2px 2px 0;
       <family>Tahoma</family>
       <pointsize>10</pointsize>
      </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
      <string>sistema admin</string>
