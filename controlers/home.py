@@ -1,16 +1,21 @@
+import sys
+import os
+
+from controlers.advanced import Advanced
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from PyQt5.QtWidgets import QMainWindow, QSystemTrayIcon, QPushButton, \
     QLabel, QMessageBox
 from PyQt5.QtGui import QGuiApplication, QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import uic
 
-from controlers import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
-from classes import System
+from settings import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 
 import os
 
 class Principal(QMainWindow):
-    def __init__(self):
+    def __init__(self, ipAddress):
         super().__init__()
         print("Initializing Principal")
         ui_file = os.path.join(FOLDER_TO_SCREENS, 'home.ui')
@@ -22,6 +27,11 @@ class Principal(QMainWindow):
         # ATRIBUTOS
         self._systemMainAddress = ''
         self._systemAdminAddress = ''
+        self.advancedScreen = None
+        self.realActionIniciar = None
+        self.realActionDesligar = None
+        self.realActionReiniciar = None
+        self._statusSystem = 'Desligado'
 
         # COMPONENTES
         # componente de área de transferência
@@ -49,27 +59,39 @@ class Principal(QMainWindow):
         labelAvancadas = self.findChild(QLabel, 'labelAvancadas')
         labelAvancadas.mousePressEvent = self.actionLabelAvancadas
 
-        # cria instancia de sistema
-        self._sy = System()
-
         # trocar o valor das variáveis
-        self._systemMainAddress = self._sy.ip
-        self._systemAdminAddress = f'{self._sy.ip}:8000'
+        self._systemMainAddress = ipAddress
+        self._systemAdminAddress = f'{ipAddress}:8000'
 
         # configurar o label que exibe informação de status do sistema
-        labelToSendStatus = self.findChild(QLabel, 'labelSystemStatus')
-        labelToSendStatus.setText(self._sy.status)
+        self.labelToSendStatus = self.findChild(QLabel, 'labelSystemStatus')
+        self.labelToSendStatus.setText(self._statusSystem)
 
         # configura o label que exibe o endereço do sistema principal
         labelToSendSystemMain = self.findChild(QLabel, 'systemMainLabel')
         labelToSendSystemMain.mousePressEvent = self.actionLabelSystemMain
-        labelToSendSystemMain.setText(f'Principal: {self._sy.ip}')
+        labelToSendSystemMain.setText(f'Principal: {ipAddress}')
 
         # configura o label que exibe o endereço do sistema admin
         labelToSendSystemAdmin = self.findChild(QLabel, 'systemAdminLabel')
         labelToSendSystemAdmin.mousePressEvent = self.actionLabelSystemAdmin
-        labelToSendSystemAdmin.setText(f'Admin: {self._sy.ip}:8000')
-        
+        labelToSendSystemAdmin.setText(f'Admin: {ipAddress}:8000')
+
+        # método que atualizará o status
+        # Atualiza a label periodicamente
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.setTextlabelToSendStatus)
+        self.timer.start(1000)  # Atualiza a cada segundo
+
+    def setTextlabelToSendStatus(self):
+        self.labelToSendStatus.setText(self._statusSystem)
+
+    def setScreenAdvanced(self, screen:Advanced):
+        self.advancedScreen = screen
+
+    def setStatusSystem(self, status):
+        self._statusSystem = status
+
     def actionLabelSystemMain(self, event):
         if event.button() == Qt.LeftButton:
             self.actionCopyContentLabel(self._systemMainAddress)
@@ -113,13 +135,17 @@ class Principal(QMainWindow):
 
     def actionLabelAvancadas(self, event):
         if event.button() == Qt.LeftButton:
-            QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de avançadas")
+            if self.advancedScreen:
+                self.advancedScreen.show()
 
     def actionIniciar(self):
-        QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de iniciar")
+        if self.realActionIniciar:
+            self.realActionIniciar()
 
     def actionReiniciar(self):
-        QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de reiniciar")
+        if self.realActionReiniciar:
+            self.realActionReiniciar()
 
     def actionDesligar(self):
-        QMessageBox.information(self, "Título da Caixa de Diálogo", "ação de desligar")
+        if self.realActionDesligar:
+            self.realActionDesligar()

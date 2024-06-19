@@ -10,12 +10,18 @@
     <height>292</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Gerenciador do Sistema Greenville</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../sistemaWeb1/back/backendDesenvolvimento/uploads/ico/iconeExcelPrincipal.ico</normaloff>../../sistemaWeb1/back/backendDesenvolvimento/uploads/ico/iconeExcelPrincipal.ico</iconset>
+    <normaloff>../statics/logo.png</normaloff>../statics/logo.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>

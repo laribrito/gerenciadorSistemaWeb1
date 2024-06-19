@@ -2,18 +2,114 @@ import subprocess
 import datetime
 import socket
 import os
+from classes.ComandClass import Comand
+from controlers import Principal
+from controlers.advanced import Advanced 
+from PyQt5.QtCore import QTimer
+import time
 
 class System:
-    _possibleStates = ['Ligado', 'Desligado']
+    _pastaFront = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\front\frontendSistema'
+    _pastaBack = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\back\backendSistema'
+    _ip = None
 
     def __init__(self):
-        self._pastaFront = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\front\frontendSistema'
-        self._status = 'Desligado'
-        self._ip = None
+        self._ip = self._getCurrentIp()
+        self.principalScreen = None
 
-        self._getCurrentIp()
+    def setPrincipalScreen(self, screen:Principal):
+        self.principalScreen = screen
 
-    def _getCurrentIp(self):
+    def setAdvancedScreen(self, screen:Advanced):
+        self.advancedScreen = screen
+
+    def getIp(self):
+        return self._ip
+    
+    def configs(self, principal, avancada):
+        self.setPrincipalScreen(principal)
+        self.setAdvancedScreen(avancada)
+
+        # Atualiza o status do sistema principal periodicamente
+        self.timer = QTimer(self.principalScreen)
+        self.timer.timeout.connect(self.atualizarStatus)
+        self.timer.start(1000)  # Atualiza a cada segundo
+
+        # adiciona funções nos botões da tela principal
+        # TELA PRINCIPAL
+
+        # BOTÃO INICIAR
+        self.principalScreen.realActionIniciar = self.iniciarTelaPrincipal
+
+        # BOTÃO DESLIGAR
+        self.principalScreen.realActionDesligar = self.desligarTelaPrincipal
+
+        # BOTÃO REINICIAR
+        self.principalScreen.realActionReiniciar = self.reiniciarTelaPrincipal
+
+    def iniciarTelaPrincipal(self):
+        self.iniciarBackend()
+
+    def desligarTelaPrincipal(self):
+        self.desligarBackend()
+
+    def reiniciarTelaPrincipal(self):
+        self.reiniciarBackend()
+
+    def atualizarStatus(self):
+        statusBack = self.advancedScreen.getStatusBack()
+        statusFront = self.advancedScreen.getStatusFront()
+
+        if statusFront == 'Error' or statusBack == 'Error':
+            self.principalScreen.setStatusSystem("Erro")
+        elif statusFront == 'Ligando' or statusBack == 'Ligando':
+            self.principalScreen.setStatusSystem("Ligando")
+        elif statusFront == 'Ligado' and statusBack == 'Ligado':
+            self.principalScreen.setStatusSystem("Ligado")
+        else:
+            self.principalScreen.setStatusSystem("Desligado")
+    
+    def iniciarBackend(self):
+        self.advancedScreen.setStatusBack('Ligando')
+
+        def testaSeLigou(out, refTextArea):
+            if 'Quit the server with CTRL-BREAK.' in out:
+                self.advancedScreen.setStatusBack('Ligado')
+            elif 'Traceback' in out:
+                self.advancedScreen.setStatusBack('Error')
+            elif 'Performing system checks' in out:
+                self.advancedScreen.setStatusBack('Ligando')
+
+        # executar comandos
+        # iniciar ambiente virtual
+        self.advancedScreen.executeComandBack(Comand('source ./env/Scripts/activate', self._pastaBack))
+        # ligar o sistema
+        self.advancedScreen.executeComandBack(Comand('python manage.py runserver 0.0.0.0:8000', self._pastaBack, testaSeLigou))
+
+    def desligarBackend(self):
+        self.advancedScreen.finishBack()
+
+    def reiniciarBackend(self):
+        self.advancedScreen.setStatusBack('Desligado')
+
+        def testaSeLigou(out, refTextArea):
+            if 'Quit the server with CTRL-BREAK.' in out:
+                self.advancedScreen.setStatusBack('Ligado')
+            elif 'Traceback' in out:
+                self.advancedScreen.setStatusBack('Error')
+            elif 'Performing system checks' in out:
+                self.advancedScreen.setStatusBack('Ligando')
+
+        self.advancedScreen.finishBack()
+
+        # executar comandos
+        # iniciar ambiente virtual
+        self.advancedScreen.executeComandBack(Comand('source ./env/Scripts/activate', self._pastaBack))
+        # ligar o sistema
+        self.advancedScreen.executeComandBack(Comand('python manage.py runserver 0.0.0.0:8000', self._pastaBack, testaSeLigou))
+
+    @staticmethod
+    def _getCurrentIp():
         # Obtém o endereço IP local
         # Obtém o nome do host da máquina
         host_name = socket.gethostname()
@@ -24,62 +120,62 @@ class System:
         # Remove espaços em branco no início e no final do endereço IP
         ip = ip.strip()
 
-        self._ip = ip
+        return ip
 
-    def _fazStash(self):
-        # guarda o que tiver de alteração não salva
-        subprocess.run(['git', 'stash', '--include-untracked'], cwd=self._pastaFront)
-
-    def _trocaParaBranchMain(self):
-        # troca para a branch main
-        subprocess.run(['git', 'checkout', 'main'], cwd=self._pastaFront)
-
-    def _atualizaIpNoSistema(self):
-        if not self._ip:
-            raise Exception('Não é possível atualizar o endereço de ip no sistema sem ter essa informação')
-
-        # Define o caminho do arquivo
-        arquivo = f"{self._pastaFront}\src\services\servers\apiMainUrls.ts"
-
-        # Define a nova linha
-        port = '${port}/api' 
-        nova_linha = f'const API_ROOT = `http://{self._ip}:{port}`\n'
-
-        # Lê o conteúdo do arquivo original
-        with open(arquivo, 'r') as file:
-            linhas = file.readlines()
-
-        # Insere a nova linha no lugar desejado
-        linhas[1] = (nova_linha)  # Insere na segunda posição (índice 1)
-
-        # Escreve o conteúdo modificado de volta ao arquivo
-        with open(arquivo, 'w') as file:
-            file.writelines(linhas)
-
-        # salvar as alterações do ip
-        subprocess.run(['git', 'add', arquivo], cwd=self._pastaFront)
-
-        subprocess.run(["git", "commit", "-m", fr"fix: atualiza ip {datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"], cwd=self._pastaFront)
-
-    def _preparaPastasParaLigarOSistema(self):
-        # apaga as pastas preexistentes para não dar erro de tipagem
-        pastasApagar = ['build', 'dev']
-        for i in pastasApagar:
-            pasta_norm = os.path.normpath(rf'{self._pastaFront}/{i}')
-            subprocess.run(['rmdir', '/s', '/q', pasta_norm], shell=True)
-
-    @property
-    def ip(self):
-        return self._ip
+    # @staticmethod
+    # def _preparacaoFront():
+    #     System._fazStash()
+    #     System._trocaParaBranchMain()
+    #     System._atualizaIpNoSistema()
+    #     System._preparaPastasParaLigarOSistema()
+ 
+    # async def iniciarFrontend(self):
+    #     # System._preparacaoFront()
+    #     self.principalScreen.setTextlabelToSendStatus('Começõu')
     
-    @property
-    def status(self):
-        return self._status
+    # @staticmethod
+    # def _fazStash():
+    #     # guarda o que tiver de alteração não salva
+    #     subprocess.run(['git', 'stash', '--include-untracked'], cwd=System._pastaFront)
 
-    @status.setter
-    def status(self, valor):
-        # Verifica se o valor é uma string e está na lista permitida
-        if isinstance(valor, str) and valor in System._possibleStates:
-            self._status = valor
-        else:
-            raise ValueError(f"Valor inválido para status: {valor}. Deve ser uma string entre {System._possibleStates}.")
+    # @staticmethod
+    # def _trocaParaBranchMain():
+    #     # troca para a branch main
+    #     subprocess.run(['git', 'checkout', 'main'], cwd=System._pastaFront)
+
+    # @staticmethod
+    # def _atualizaIpNoSistema():
+    #     if not System._ip:
+    #         raise Exception('Não é possível atualizar o endereço de ip no sistema sem ter essa informação')
+
+    #     # Define o caminho do arquivo
+    #     arquivo = f"{System._pastaFront}\src\services\servers\apiMainUrls.ts"
+
+    #     # Define a nova linha
+    #     port = '${port}/api' 
+    #     nova_linha = f'const API_ROOT = `http://{System._ip}:{port}`\n'
+
+    #     # Lê o conteúdo do arquivo original
+    #     with open(arquivo, 'r') as file:
+    #         linhas = file.readlines()
+
+    #     # Insere a nova linha no lugar desejado
+    #     linhas[1] = (nova_linha)  # Insere na segunda posição (índice 1)
+
+    #     # Escreve o conteúdo modificado de volta ao arquivo
+    #     with open(arquivo, 'w') as file:
+    #         file.writelines(linhas)
+
+    #     # salvar as alterações do ip
+    #     subprocess.run(['git', 'add', arquivo], cwd=System._pastaFront)
+
+    #     subprocess.run(["git", "commit", "-m", fr"fix: atualiza ip {datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"], cwd=System._pastaFront)
+
+    # @staticmethod
+    # def _preparaPastasParaLigarOSistema():
+        # apaga as pastas preexistentes para não dar erro de tipagem
+        # pastasApagar = ['build', 'dev']
+        # for i in pastasApagar:
+        #     pasta_norm = os.path.normpath(rf'{System._pastaFront}/{i}')
+        #     subprocess.run(['rmdir', '/s', '/q', pasta_norm], shell=True)
+    
