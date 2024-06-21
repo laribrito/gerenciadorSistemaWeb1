@@ -22,9 +22,14 @@ class Advanced(QMainWindow):
         # ATRIBUTOS
 
         # COMPONENTES
+        self.timer = QTimer(self)
 
         # recuperar os botões
-        allBtnsClicked = {}
+        allBtnsClicked = {
+            'btnIniciarBack':   self.startBack, 
+            'btnReiniciarBack': self.restartBack, 
+            'btnDesligarBack':  self.stopBack
+        }
 
         for btnLabel, btnClicked in allBtnsClicked.items():
             btnObj = self.findChild(QPushButton, btnLabel)
@@ -34,6 +39,8 @@ class Advanced(QMainWindow):
         # recuperar labels
         # status backend
         self.labelStatusBackend = self.findChild(QLabel, 'statusBackend')
+        self.timer.timeout.connect(lambda : self.labelStatusBackend.setText(self._statusBack))
+        self.timer.start(1000)  # Atualiza a cada segundo
 
         # status frontend
         self.labelStatusFrontend = self.findChild(QLabel, 'statusFrontend')
