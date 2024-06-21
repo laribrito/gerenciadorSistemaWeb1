@@ -9,73 +9,13 @@ import time
 
 class System:
     _pastaFront = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\front\frontendSistema'
-    _pastaBack = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\back\backendSistema'
-    _ip = None
 
     def __init__(self):
         self._ip = self._getCurrentIp()
         self.principalScreen = None
 
-    def setPrincipalScreen(self, screen:Principal):
-        self.principalScreen = screen
-
-    def setAdvancedScreen(self, screen:Advanced):
-        self.advancedScreen = screen
-
     def getIp(self):
         return self._ip
-    
-    def configs(self, principal, avancada):
-        self.setPrincipalScreen(principal)
-        self.setAdvancedScreen(avancada)
-
-        # Atualiza o status do sistema principal periodicamente
-        self.timer = QTimer(self.principalScreen)
-        self.timer.timeout.connect(self.atualizarStatus)
-        self.timer.start(1000)  # Atualiza a cada segundo
-
-        # adiciona funções nos botões da tela principal
-        # TELA PRINCIPAL
-
-        # BOTÃO INICIAR
-        self.principalScreen.realActionIniciar = self.iniciarTelaPrincipal
-
-        # BOTÃO DESLIGAR
-        self.principalScreen.realActionDesligar = self.desligarTelaPrincipal
-
-        # BOTÃO REINICIAR
-        self.principalScreen.realActionReiniciar = self.reiniciarTelaPrincipal
-
-    def iniciarTelaPrincipal(self):
-        self.iniciarBackend()
-
-    def desligarTelaPrincipal(self):
-        self.desligarBackend()
-
-    def reiniciarTelaPrincipal(self):
-        self.reiniciarBackend()
-
-    def atualizarStatus(self):
-        statusBack = self.advancedScreen.getStatusBack()
-        statusFront = self.advancedScreen.getStatusFront()
-
-        if statusFront == 'Error' or statusBack == 'Error':
-            self.principalScreen.setStatusSystem("Erro")
-        elif statusFront == 'Ligando' or statusBack == 'Ligando':
-            self.principalScreen.setStatusSystem("Ligando")
-        elif statusFront == 'Ligado' and statusBack == 'Ligado':
-            self.principalScreen.setStatusSystem("Ligado")
-        else:
-            self.principalScreen.setStatusSystem("Desligado")
-    
-    def iniciarBackend(self):
-        self.advancedScreen.backendTerminal.startServer()
-        
-    def desligarBackend(self):
-        self.advancedScreen.backendTerminal.stopServer()
-
-    def reiniciarBackend(self):
-        self.advancedScreen.backendTerminal.restart()
         
     @staticmethod
     def _getCurrentIp():

@@ -2,6 +2,7 @@ import sys
 import os
 
 from controlers.advanced import Advanced
+from utils.EstilizaBotoes import estilizaBotao
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QMainWindow, QSystemTrayIcon, QPushButton, \
@@ -24,10 +25,12 @@ class Principal(QMainWindow):
         self.show()
         # print("Window Shown")
 
+        # TELAS
+        self.screenAdvanced = Advanced()
+
         # ATRIBUTOS
         self._systemMainAddress = ''
         self._systemAdminAddress = ''
-        self.advancedScreen = None
         self.realActionIniciar = None
         self.realActionDesligar = None
         self.realActionReiniciar = None
@@ -53,7 +56,7 @@ class Principal(QMainWindow):
         for btnLabel, btnClicked in allBtnsClicked.items():
             btnObj = self.findChild(QPushButton, btnLabel)
             btnObj.clicked.connect(btnClicked)
-            self.estilizaBotao(btnObj)
+            estilizaBotao(btnObj)
 
         # configurar label que leva para a tela avançada
         labelAvancadas = self.findChild(QLabel, 'labelAvancadas')
@@ -84,13 +87,20 @@ class Principal(QMainWindow):
         self.timer.start(1000)  # Atualiza a cada segundo
 
     def setTextlabelToSendStatus(self):
-        self.labelToSendStatus.setText(self._statusSystem)
+        status = None
+        statusBack = self.screenAdvanced.getStatusBack()
+        statusFront = self.screenAdvanced.getStatusFront()
 
-    def setScreenAdvanced(self, screen:Advanced):
-        self.advancedScreen = screen
+        if statusFront == 'Error' or statusBack == 'Error':
+            status = "Erro"
+        elif statusFront == 'Ligando' or statusBack == 'Ligando':
+            status = "Ligando"
+        elif statusFront == 'Ligado' and statusBack == 'Ligado':
+            status = "Ligado"
+        else:
+            status = "Desligado"
 
-    def setStatusSystem(self, status):
-        self._statusSystem = status
+        self.labelToSendStatus.setText(status)
 
     def actionLabelSystemMain(self, event):
         if event.button() == Qt.LeftButton:
@@ -109,46 +119,22 @@ class Principal(QMainWindow):
             3000 
         )
 
-    def estilizaBotao(self, buttom):
-        # Estilizando o botão com Qt Style Sheets
-        buttom.setStyleSheet("""
-            QPushButton {
-                border-radius: 10px;
-                background-color: #182e15;
-                color: white;
-                border: 1px solid rgb(255, 255, 255);
-                padding: 10px;
-                font-size: 16px;
-                font-weight: bold;
-                text-align: center;
-            }
-
-            QPushButton:hover {
-                background-color: #1f3a1c;
-            }
-
-            QPushButton:pressed {
-                background-color: #152610;
-                border-color: rgb(200, 200, 200);
-            }
-        """)
-
     def actionLabelAvancadas(self, event):
         if event.button() == Qt.LeftButton:
-            if self.advancedScreen:
-                self.advancedScreen.show()
+            if self.screenAdvanced:
+                self.screenAdvanced.show()
 
     def actionIniciar(self):
-        if self.realActionIniciar:
-            self.realActionIniciar()
+        self.screenAdvanced.startBack()
+        # self.screenAdvanced.startFront()
 
     def actionReiniciar(self):
-        if self.realActionReiniciar:
-            self.realActionReiniciar()
+        self.screenAdvanced.restartBack()
+        # self.screenAdvanced.restartFront()
 
     def actionDesligar(self):
-        if self.realActionDesligar:
-            self.realActionDesligar()
+        self.screenAdvanced.stopBack()
+        self.screenAdvanced.stopFront()
 
     def closeEvent(self, event):
         QApplication.instance().quit()

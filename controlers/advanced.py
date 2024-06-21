@@ -8,10 +8,11 @@ from controlers import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 
 import os
 
-from widgets.BackendTerminal import BackendTerminalWidget
+from utils.EstilizaBotoes import estilizaBotao
+from widgets.BackendTerminal import TerminalWidget
 
 class Advanced(QMainWindow):
-    _possibleStatesBack = ['Desligado', 'Ligado', 'Error', 'Ligando']
+    _possibleStatus = ['Desligado', 'Ligado', 'Error', 'Ligando']
 
     def __init__(self):
         super().__init__()
@@ -28,7 +29,7 @@ class Advanced(QMainWindow):
         for btnLabel, btnClicked in allBtnsClicked.items():
             btnObj = self.findChild(QPushButton, btnLabel)
             btnObj.clicked.connect(btnClicked)
-            self.estilizaBotao(btnObj)
+            estilizaBotao(btnObj)
 
         # recuperar labels
         # status backend
@@ -39,65 +40,67 @@ class Advanced(QMainWindow):
 
         # Atualiza a label periodicamente
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.attStatusBack)
+        # self.timer.timeout.connect(self.attStatusBack)
         self.timer.start(1000)  # Atualiza a cada segundo
 
         # BACKEND
-        self.backendTerminal = BackendTerminalWidget('terminalBackend', self)
-        self._statusBack = Advanced._possibleStatesBack[0]
-        # self.'server_thread = DjangoServerThread('C:\\Users\\danie\\OneDrive\\Documents\\programas\\sistemaWeb1\\back\\backendSistema', self._backendTerminal.text_edit)
+        def trackerStatusBack(out):
+            if 'Quit the server with CTRL-BREAK.' in out:
+                self._statusBack = 'Ligado'
+            elif 'Traceback' in out:
+                self._statusBack = 'Error'
+            elif 'Serviço iniciado' in out:
+                self._statusBack = 'Ligando'
+            elif 'Serviço interrompido' in out:
+                self._statusBack = 'Desligado'
+
+        self._backendTerminal = TerminalWidget(
+            'terminalBackend', 
+            r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\back\backendSistema', 
+            ['python', 'manage.py', 'runserver', '0.0.0.0:8001'], 
+            trackerStatusBack,
+            self
+        )
+
+        self._statusBack = Advanced._possibleStatus[0]
 
         # FRONTEND
         self._statusFront = 'Ligado'
 
-    def attStatusBack(self):
-        self.labelStatusBackend.setText(self._statusBack)
+    # MÉTODOS BACKEND
+    def startBack(self):
+        self._backendTerminal.start()
 
-    def attStatusFront(self):
-        self.labelStatusBackend.setText(self._statusFront)
+    def restartBack(self):
+        self._backendTerminal.restart()
+    
+    def stopBack(self):
+        self._backendTerminal.stop()
+
+    def setStatusBack(self, status):
+        if status in Advanced._possibleStatus:
+            self._statusBack = status
 
     def getStatusBack(self):
         return self._statusBack
     
+    # MÉTODOS FRONT
+    def startFront(self):
+        return
+        self._frontendTerminal.start()
+
+    def restartFront(self):
+        return
+        self._frontendTerminal.restart()
+    
+    def stopFront(self):
+        return
+        self._frontendTerminal.stop()
+
+    def setStatusFront(self, status):
+        return
+        if status in Advanced._possibleStatus:
+            self._statusFront = status
+
     def getStatusFront(self):
         return self._statusFront
-    
-    def initBack(self):
-        self._backendTerminal.toActive = True
-
-    def finishBack(self):
-        self._backendTerminal.toActive = False
-        # self.server_thread.stop_server()
-        # self.server_thread.wait()  # Substitui join para QThread
-        # # print("Programa principal finalizado")
-
-    def reiniciarBack(self, command:Comand):
-        self._backendTerminal.reiniciar(command.comand, command.context, command.onActive)
-
-    def setStatusBack(self, status):
-        if status in Advanced._possibleStatesBack:
-            self._statusBack = status
-
-    def estilizaBotao(self, buttom):
-        # Estilizando o botão com Qt Style Sheets
-        buttom.setStyleSheet("""
-            QPushButton {
-                border-radius: 10px;
-                background-color: #182e15;
-                color: white;
-                border: 1px solid rgb(255, 255, 255);
-                padding: 10px;
-                font-size: 16px;
-                font-weight: bold;
-                text-align: center;
-            }
-
-            QPushButton:hover {
-                background-color: #1f3a1c;
-            }
-
-            QPushButton:pressed {
-                background-color: #152610;
-                border-color: rgb(200, 200, 200);
-            }
-        """)

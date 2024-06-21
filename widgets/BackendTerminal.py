@@ -1,41 +1,35 @@
-import os
-import select
+import datetime
 from PyQt5.QtWidgets import QWidget, QTextEdit
-import subprocess
-import threading
-import psutil
-import time
-
-import threading
-import subprocess
-import time
-import psutil
 from PyQt5.QtCore import pyqtSignal, QObject
+import subprocess
+import threading
+import psutil
 
-
-class DjangoServerThread(threading.Thread, QObject):
+class ServiceThread(threading.Thread, QObject):
     output_signal = pyqtSignal(str)  # Sinal para enviar a saída do subprocesso
+    TAM_LINE = 20
 
-    def __init__(self, path):
+    def __init__(self, path, comandList):
         threading.Thread.__init__(self)
         QObject.__init__(self)
         self.path = path
         self.process = None
         self.stdout_thread = None
         self.stderr_thread = None
+        self.comandList = comandList
         self._stop_event = threading.Event()
 
     def run(self):
         # Iniciar o servidor Django
         self.process = subprocess.Popen(
-            ['python', 'manage.py', 'runserver', '0.0.0.0:8001'],
+            self.comandList,
             cwd=self.path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True
         )
         # print("Servidor Django iniciado...")  # Depuração
-        self.output_signal.emit("Servidor Django iniciado...")
+        self.output_signal.emit(f"\nServiço iniciado {'-'*ServiceThread.TAM_LINE} {self.getDate()} \n")
 
         # Threads para leitura de stdout e stderr
         stdout_thread = threading.Thread(target=self.read_stdout)
@@ -52,7 +46,9 @@ class DjangoServerThread(threading.Thread, QObject):
             if line:
                 # print(f"Emitting output: {line}")  # Depuração
                 self.output_signal.emit(line)
-        self.process.stdout.close()
+
+        if self.process:
+            self.process.stdout.close()
 
     def read_stderr(self):
         for line in iter(self.process.stderr.readline, ''):
@@ -62,7 +58,16 @@ class DjangoServerThread(threading.Thread, QObject):
             if line:
                 # print(f"Emitting error: {line}")  # Depuração
                 self.output_signal.emit(line)
-        self.process.stderr.close()
+
+        if self.process:
+            self.process.stderr.close()
+
+    def getDate(self):
+        # Obtém a data atual
+        current_datetime = datetime.datetime.now()
+        
+        # Retorna a data atual no formato desejado
+        return current_datetime.strftime('%d / %m / %Y %H:%M:%S') + '-' * ServiceThread.TAM_LINE
 
     def stop_server(self):
         if self.process:
@@ -77,15 +82,16 @@ class DjangoServerThread(threading.Thread, QObject):
             for proc in process.children(recursive=True):
                 proc.terminate()
             process.terminate()
-            # print("Servidor Django foi interrompido")  # Depuração
-            self.output_signal.emit("Servidor Django foi interrompido")
+            self.process = None
+            self.output_signal.emit(f"\nServiço interrompido {'-'*(ServiceThread.TAM_LINE-7)} {self.getDate()}\n") 
+            # print(f"Serviço interrompido {'-'*ServiceThread.TAM_LINE}")  # Depuração
 
     def stop(self):
         self._stop_event.set()
         self.stop_server()
 
-class BackendTerminalWidget(QWidget):
-    def __init__(self, labelComponent, parent):
+class TerminalWidget(QWidget):
+    def __init__(self, labelComponent, cwd, comandList, trackerStatus, parent):
         super().__init__(parent)
 
         self.text_edit = parent.findChild(QTextEdit, labelComponent)
@@ -98,20 +104,26 @@ class BackendTerminalWidget(QWidget):
             }
         """)
 
-        self.path = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\back\backendSistema'
+        self.path = cwd
+        self.comandList = comandList
         self.server_thread = None
+        self.tracker = trackerStatus
 
-    def startServer(self):
-        self.server_thread = DjangoServerThread(self.path)
+    def start(self):
+        self.server_thread = ServiceThread(self.path, self.comandList)
         self.server_thread.output_signal.connect(self.update_text_edit)
         self.server_thread.start()
 
-    def stopServer(self):
-        self.server_thread.stop()
+    def stop(self):
+        if self.server_thread:
+            self.server_thread.stop()
 
     def restart(self):
-        self.stopServer()
-        self.startServer()
+        self.stop()
+        self.start()
 
     def update_text_edit(self, text):
         self.text_edit.append(text)
+
+        if self.tracker:
+            self.tracker(text)

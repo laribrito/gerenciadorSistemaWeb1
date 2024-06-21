@@ -10,15 +10,10 @@ os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
+    
     Sy = System()
 
     janelaPrincipal = Principal(Sy.getIp())
-    
-    janelaAvancada = Advanced()
-    
-    janelaPrincipal.setScreenAdvanced(janelaAvancada)
-
-    Sy.configs(janelaPrincipal, janelaAvancada)
     
     janelaPrincipal.show()
     
