@@ -9,7 +9,7 @@ from controlers import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 import os
 
 from utils.EstilizaBotoes import estilizaBotao
-from widgets.BackendTerminal import TerminalWidget
+from widgets.terminal import TerminalWidget
 
 class Advanced(QMainWindow):
     _possibleStatus = ['Desligado', 'Ligado', 'Error', 'Ligando']

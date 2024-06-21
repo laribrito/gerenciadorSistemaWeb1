@@ -1,1 +1,1 @@
-from .BackendTerminal import *
+from .terminal import *
