@@ -2,7 +2,6 @@ import subprocess
 import datetime
 import socket
 import os
-from classes.ComandClass import Comand
 from controlers import Principal
 from controlers.advanced import Advanced 
 from PyQt5.QtCore import QTimer
@@ -70,44 +69,14 @@ class System:
             self.principalScreen.setStatusSystem("Desligado")
     
     def iniciarBackend(self):
-        self.advancedScreen.setStatusBack('Ligando')
-
-        def testaSeLigou(out, refTextArea):
-            if 'Quit the server with CTRL-BREAK.' in out:
-                self.advancedScreen.setStatusBack('Ligado')
-            elif 'Traceback' in out:
-                self.advancedScreen.setStatusBack('Error')
-            elif 'Performing system checks' in out:
-                self.advancedScreen.setStatusBack('Ligando')
-
-        # executar comandos
-        # iniciar ambiente virtual
-        self.advancedScreen.executeComandBack(Comand('source ./env/Scripts/activate', self._pastaBack))
-        # ligar o sistema
-        self.advancedScreen.executeComandBack(Comand('python manage.py runserver 0.0.0.0:8000', self._pastaBack, testaSeLigou))
-
+        self.advancedScreen.backendTerminal.startServer()
+        
     def desligarBackend(self):
-        self.advancedScreen.finishBack()
+        self.advancedScreen.backendTerminal.stopServer()
 
     def reiniciarBackend(self):
-        self.advancedScreen.setStatusBack('Desligado')
-
-        def testaSeLigou(out, refTextArea):
-            if 'Quit the server with CTRL-BREAK.' in out:
-                self.advancedScreen.setStatusBack('Ligado')
-            elif 'Traceback' in out:
-                self.advancedScreen.setStatusBack('Error')
-            elif 'Performing system checks' in out:
-                self.advancedScreen.setStatusBack('Ligando')
-
-        self.advancedScreen.finishBack()
-
-        # executar comandos
-        # iniciar ambiente virtual
-        self.advancedScreen.executeComandBack(Comand('source ./env/Scripts/activate', self._pastaBack))
-        # ligar o sistema
-        self.advancedScreen.executeComandBack(Comand('python manage.py runserver 0.0.0.0:8000', self._pastaBack, testaSeLigou))
-
+        self.advancedScreen.backendTerminal.restart()
+        
     @staticmethod
     def _getCurrentIp():
         # Obtém o endereço IP local

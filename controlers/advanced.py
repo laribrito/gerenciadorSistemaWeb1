@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QLabel, QPushButton
+import time
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton
 from PyQt5.QtCore import QTimer
 from PyQt5 import uic
 
@@ -7,7 +8,7 @@ from controlers import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 
 import os
 
-from widgets.Terminal import TerminalWidget
+from widgets.BackendTerminal import BackendTerminalWidget
 
 class Advanced(QMainWindow):
     _possibleStatesBack = ['Desligado', 'Ligado', 'Error', 'Ligando']
@@ -42,8 +43,9 @@ class Advanced(QMainWindow):
         self.timer.start(1000)  # Atualiza a cada segundo
 
         # BACKEND
-        self._backendTerminal = TerminalWidget('terminalBackend', self)
+        self.backendTerminal = BackendTerminalWidget('terminalBackend', self)
         self._statusBack = Advanced._possibleStatesBack[0]
+        # self.'server_thread = DjangoServerThread('C:\\Users\\danie\\OneDrive\\Documents\\programas\\sistemaWeb1\\back\\backendSistema', self._backendTerminal.text_edit)
 
         # FRONTEND
         self._statusFront = 'Ligado'
@@ -59,13 +61,15 @@ class Advanced(QMainWindow):
     
     def getStatusFront(self):
         return self._statusFront
-
-    def executeComandBack(self, command:Comand):
-        self._backendTerminal.executar_comando(command.comand, command.context, command.onActive)
+    
+    def initBack(self):
+        self._backendTerminal.toActive = True
 
     def finishBack(self):
-        self._backendTerminal.parar_comando()
-        self.setStatusBack('Desligado')
+        self._backendTerminal.toActive = False
+        # self.server_thread.stop_server()
+        # self.server_thread.wait()  # Substitui join para QThread
+        # # print("Programa principal finalizado")
 
     def reiniciarBack(self, command:Comand):
         self._backendTerminal.reiniciar(command.comand, command.context, command.onActive)

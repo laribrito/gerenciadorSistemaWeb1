@@ -5,7 +5,7 @@ from controlers.advanced import Advanced
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QMainWindow, QSystemTrayIcon, QPushButton, \
-    QLabel, QMessageBox
+    QLabel, QApplication
 from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import uic
@@ -17,12 +17,12 @@ import os
 class Principal(QMainWindow):
     def __init__(self, ipAddress):
         super().__init__()
-        print("Initializing Principal")
+        # print("Initializing Principal")
         ui_file = os.path.join(FOLDER_TO_SCREENS, 'home.ui')
         uic.loadUi(ui_file, self)
-        print("UI Loaded")
+        # print("UI Loaded")
         self.show()
-        print("Window Shown")
+        # print("Window Shown")
 
         # ATRIBUTOS
         self._systemMainAddress = ''
@@ -149,3 +149,6 @@ class Principal(QMainWindow):
     def actionDesligar(self):
         if self.realActionDesligar:
             self.realActionDesligar()
+
+    def closeEvent(self, event):
+        QApplication.instance().quit()
