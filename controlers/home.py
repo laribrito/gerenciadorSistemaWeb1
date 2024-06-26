@@ -1,9 +1,7 @@
-import sys
 import os
 
 from controlers.advanced import Advanced
 from utils.EstilizaBotoes import estilizaBotao
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QMainWindow, QSystemTrayIcon, QPushButton, \
     QLabel, QApplication
@@ -11,7 +9,7 @@ from PyQt5.QtGui import QGuiApplication, QIcon
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import uic
 
-from settings import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
+from controlers.settings import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 
 import os
 
