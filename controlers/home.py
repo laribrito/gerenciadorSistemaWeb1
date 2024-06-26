@@ -126,11 +126,11 @@ class Principal(QMainWindow):
 
     def actionIniciar(self):
         self.screenAdvanced.startBack()
-        # self.screenAdvanced.startFront()
+        self.screenAdvanced.startFront()
 
     def actionReiniciar(self):
         self.screenAdvanced.restartBack()
-        # self.screenAdvanced.restartFront()
+        self.screenAdvanced.restartFront()
 
     def actionDesligar(self):
         self.screenAdvanced.stopBack()

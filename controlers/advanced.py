@@ -1,9 +1,10 @@
-import time
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton
+import datetime
+import subprocess
+from PyQt5.QtWidgets import QMainWindow, QLabel, QPushButton
 from PyQt5.QtCore import QTimer
 from PyQt5 import uic
 
-from classes.ComandClass import Comand
+from classes.SystemClass import System
 from controlers import FOLDER_TO_SCREENS, FOLDER_TO_STATICS
 
 import os
@@ -23,12 +24,16 @@ class Advanced(QMainWindow):
 
         # COMPONENTES
         self.timer = QTimer(self)
+        self.timer.start(1000)  # Atualiza a cada segundo
 
         # recuperar os botões
         allBtnsClicked = {
             'btnIniciarBack':   self.startBack, 
             'btnReiniciarBack': self.restartBack, 
-            'btnDesligarBack':  self.stopBack
+            'btnDesligarBack':  self.stopBack,
+            'btnIniciarFront':   self.startFront, 
+            'btnReiniciarFront': self.restartFront, 
+            'btnDesligarFront':  self.stopFront
         }
 
         for btnLabel, btnClicked in allBtnsClicked.items():
@@ -40,15 +45,10 @@ class Advanced(QMainWindow):
         # status backend
         self.labelStatusBackend = self.findChild(QLabel, 'statusBackend')
         self.timer.timeout.connect(lambda : self.labelStatusBackend.setText(self._statusBack))
-        self.timer.start(1000)  # Atualiza a cada segundo
 
         # status frontend
         self.labelStatusFrontend = self.findChild(QLabel, 'statusFrontend')
-
-        # Atualiza a label periodicamente
-        self.timer = QTimer(self)
-        # self.timer.timeout.connect(self.attStatusBack)
-        self.timer.start(1000)  # Atualiza a cada segundo
+        self.timer.timeout.connect(lambda : self.labelStatusFrontend.setText(self._statusFront))
 
         # BACKEND
         def trackerStatusBack(out):
@@ -72,7 +72,27 @@ class Advanced(QMainWindow):
         self._statusBack = Advanced._possibleStatus[0]
 
         # FRONTEND
-        self._statusFront = 'Ligado'
+        def trackerStatusFront(out):
+            if 'Quit the server with CTRL-BREAK.' in out:
+                self._statusFront = 'Ligado'
+            elif 'Traceback' in out:
+                self._statusFront = 'Error'
+            elif 'Creating an optimized production build ...' in out:
+                self._statusFront = 'Ligando'
+            elif 'Serviço interrompido' in out:
+                self._statusFront = 'Desligado'
+
+        self._pastaFront = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\front\frontendSistema'
+
+        self._frontendTerminal = TerminalWidget(
+            'terminalFrontend', 
+            self._pastaFront, 
+            ['npm.cmd', 'run', 'start'], 
+            trackerStatusFront,
+            self
+        )
+
+        self._statusFront = Advanced._possibleStatus[0]
 
     # MÉTODOS BACKEND
     def startBack(self):
@@ -93,7 +113,8 @@ class Advanced(QMainWindow):
     
     # MÉTODOS FRONT
     def startFront(self):
-        return
+        self._statusFront = 'Ligando'
+        self._preparacaoFront()
         self._frontendTerminal.start()
 
     def restartFront(self):
@@ -104,10 +125,50 @@ class Advanced(QMainWindow):
         return
         self._frontendTerminal.stop()
 
-    def setStatusFront(self, status):
-        return
-        if status in Advanced._possibleStatus:
-            self._statusFront = status
-
     def getStatusFront(self):
         return self._statusFront
+    
+    def _preparacaoFront(self):
+        self._fazStash()
+        self._trocaParaBranchMain()
+        self._atualizaIpNoSistema()
+        self._preparaPastasParaLigarOSistema()
+    
+    def _fazStash(self):
+        # guarda o que tiver de alteração não salva
+        subprocess.run(['git', 'stash', '--include-untracked'], cwd=self._pastaFront)
+
+    def _trocaParaBranchMain(self):
+        # troca para a branch main
+        subprocess.run(['git', 'checkout', 'main'], cwd=self._pastaFront)
+
+    def _atualizaIpNoSistema(self):
+        # Define o caminho do arquivo
+        arquivo = f"{self._pastaFront}\\src\\services\\servers\\apiMainUrls.ts"
+
+        # Define a nova linha
+        port = '${port}/api' 
+        nova_linha = f'export const API_ROOT = `http://{System().getIp()}:{port}`\n'
+
+        # Lê o conteúdo do arquivo original
+        with open(arquivo, 'r') as file:
+            linhas = file.readlines()
+
+        # Insere a nova linha no lugar desejado
+        linhas[1] = (nova_linha)  # Insere na segunda posição (índice 1)
+
+        # Escreve o conteúdo modificado de volta ao arquivo
+        with open(arquivo, 'w') as file:
+            file.writelines(linhas)
+
+        # salvar as alterações do ip
+        subprocess.run(['git', 'add', arquivo], cwd=self._pastaFront)
+
+        subprocess.run(["git", "commit", "-m", fr"fix: atualiza ip {datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"], cwd=self._pastaFront)
+
+    def _preparaPastasParaLigarOSistema(self):
+        # apaga as pastas preexistentes para  não dar erro de tipagem
+        pastasApagar = ['build', 'dev']
+        for i in pastasApagar:
+            pasta_norm = os.path.normpath(rf'{self._pastaFront}/{i}')
+            subprocess.run(['rmdir', '/s', '/q', pasta_norm], shell=True)

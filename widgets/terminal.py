@@ -26,7 +26,7 @@ class ServiceThread(threading.Thread, QObject):
             cwd=self.path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True
+            universal_newlines=True,
         )
         # print("Servidor Django iniciado...")  # Depuração
         self.output_signal.emit(f"\nServiço iniciado {'-'*ServiceThread.TAM_LINE} {self.getDate()} \n")
@@ -42,9 +42,9 @@ class ServiceThread(threading.Thread, QObject):
         for line in iter(self.process.stdout.readline, ''):
             if self._stop_event.is_set():
                 break
-            line = line.strip()
+            # line = line.strip()
             if line:
-                # print(f"Emitting output: {line}")  # Depuração
+                print(f"Emitting output: {line.encode('utf-8')}")  # Depuração
                 self.output_signal.emit(line)
 
         if self.process:
@@ -54,7 +54,7 @@ class ServiceThread(threading.Thread, QObject):
         for line in iter(self.process.stderr.readline, ''):
             if self._stop_event.is_set():
                 break
-            line = line.strip()
+            # line = line.strip()
             if line:
                 # print(f"Emitting error: {line}")  # Depuração
                 self.output_signal.emit(line)
@@ -122,7 +122,30 @@ class TerminalWidget(QWidget):
         self.stop()
         self.start()
 
+    def clean_terminal_output(self, text):
+        import re
+        
+        # Expressão regular para remover códigos de escape ANSI
+        print('texto antes: ', text)
+        
+        # Padrão regex para o formato \xhh
+        padrao_hex = r'\\x[0-9a-fA-F]{2}'
+        
+        # Padrão regex para caracteres estranhos
+        padrao_estranho = r'[^\x00-\x7F]+'
+
+        padroes = [padrao_hex, padrao_estranho]
+
+        for padrao in padroes:
+            cleaned_text = re.sub(padrao, '', text)
+
+        print('text depois: ', cleaned_text)
+
+        return cleaned_text
+    
     def update_text_edit(self, text):
+        text = self.clean_terminal_output(text)
+        print(text)
         self.text_edit.append(text)
 
         if self.tracker:
