@@ -1,11 +1,4 @@
-import subprocess
-import datetime
 import socket
-import os
-from controlers import Principal
-from controlers.advanced import Advanced 
-from PyQt5.QtCore import QTimer
-import time
 
 class System:
     _pastaFront = r'C:\Users\danie\OneDrive\Documents\programas\sistemaWeb1\front\frontendSistema'
@@ -82,7 +75,7 @@ class System:
 
     # @staticmethod
     # def _preparaPastasParaLigarOSistema():
-        # apaga as pastas preexistentes para não dar erro de tipagem
+        # apaga as pastas preexistentes para  não dar erro de tipagem
         # pastasApagar = ['build', 'dev']
         # for i in pastasApagar:
         #     pasta_norm = os.path.normpath(rf'{System._pastaFront}/{i}')
