@@ -75,7 +75,7 @@ class Advanced(QMainWindow):
         def trackerStatusFront(out):
             if 'Quit the server with CTRL-BREAK.' in out:
                 self._statusFront = 'Ligado'
-            elif 'Traceback' in out:
+            elif 'Traceback' in out or 'Error' in out:
                 self._statusFront = 'Error'
             elif 'Creating an optimized production build ...' in out:
                 self._statusFront = 'Ligando'
@@ -118,11 +118,9 @@ class Advanced(QMainWindow):
         self._frontendTerminal.start()
 
     def restartFront(self):
-        return
         self._frontendTerminal.restart()
     
     def stopFront(self):
-        return
         self._frontendTerminal.stop()
 
     def getStatusFront(self):

@@ -44,7 +44,7 @@ class ServiceThread(threading.Thread, QObject):
                 break
             # line = line.strip()
             if line:
-                print(f"Emitting output: {line.encode('utf-8')}")  # Depuração
+                # print(f"Emitting output: {line.encode('utf-8')}")  # Depuração
                 self.output_signal.emit(line)
 
         if self.process:
@@ -78,13 +78,17 @@ class ServiceThread(threading.Thread, QObject):
                 self.stderr_thread.join()
 
             # Terminar o processo e seus filhos
-            process = psutil.Process(self.process.pid)
-            for proc in process.children(recursive=True):
-                proc.terminate()
-            process.terminate()
-            self.process = None
-            self.output_signal.emit(f"\nServiço interrompido {'-'*(ServiceThread.TAM_LINE-7)} {self.getDate()}\n") 
-            # print(f"Serviço interrompido {'-'*ServiceThread.TAM_LINE}")  # Depuração
+            try:
+                process = psutil.Process(self.process.pid)
+                for proc in process.children(recursive=True):
+                    proc.terminate()
+                process.terminate()
+            except:
+                pass
+            finally:
+                self.process = None
+                self.output_signal.emit(f"\nServiço interrompido {'-'*(ServiceThread.TAM_LINE-7)} {self.getDate()}\n") 
+                # print(f"Serviço interrompido {'-'*ServiceThread.TAM_LINE}")  # Depuração
 
     def stop(self):
         self._stop_event.set()
@@ -126,7 +130,7 @@ class TerminalWidget(QWidget):
         import re
         
         # Expressão regular para remover códigos de escape ANSI
-        print('texto antes: ', text)
+        # print('texto antes: ', text)
         
         # Padrão regex para o formato \xhh
         padrao_hex = r'\\x[0-9a-fA-F]{2}'
@@ -139,13 +143,12 @@ class TerminalWidget(QWidget):
         for padrao in padroes:
             cleaned_text = re.sub(padrao, '', text)
 
-        print('text depois: ', cleaned_text)
+        # print('text depois: ', cleaned_text)
 
         return cleaned_text
     
     def update_text_edit(self, text):
         text = self.clean_terminal_output(text)
-        print(text)
         self.text_edit.append(text)
 
         if self.tracker:
